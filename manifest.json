@@ -11,13 +11,13 @@
   "lang": "he",
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -29,13 +29,14 @@
       "name": "נוכחות",
       "short_name": "נוכחות",
       "url": "./SunDay-v3.html#attendance",
-      "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]
+      "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
     },
     {
       "name": "שיבוץ",
       "short_name": "שיבוץ",
       "url": "./SunDay-v3.html#assignment",
-      "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]
+      "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
     }
   ]
+
 }
