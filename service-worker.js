@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sunday-v3.0';
+const CACHE_NAME = 'sunday-v3.1';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -84,9 +84,10 @@ self.addEventListener('fetch', event => {
             if (cached) return cached;
             // דף ברירת מחדל אם אין כלום
             if (event.request.destination === 'document') {
-              return caches.match('./SunDay-v3.html');
+              return caches.match('./index.html');
             }
           });
       })
   );
 });
+
