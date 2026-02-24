@@ -2,7 +2,7 @@
   "name": "SunDay - מערכת ניהול מילואים",
   "short_name": "SunDay",
   "description": "מערכת ניהול מילואים - נוכחות ושיבוץ",
-  "start_url": "./SunDay-v3.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0e0826",
@@ -28,15 +28,16 @@
     {
       "name": "נוכחות",
       "short_name": "נוכחות",
-      "url": "./SunDay-v3.html#attendance",
+      "url": "./index.html#attendance",
       "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
     },
     {
       "name": "שיבוץ",
       "short_name": "שיבוץ",
-      "url": "./SunDay-v3.html#assignment",
+      "url": "./index.html#assignment",
       "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
     }
   ]
 
 }
+
