@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="he-IL" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SunDay - מערכת ניהול מילואים</title>
+    <!-- ====== PWA - הוסף את השורות האלה ====== -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#5b2d8e">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- iOS ספציפי -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SunDay">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    
+    <!-- Splash screen לאייפון -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- ====== סוף PWA ====== -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/attendance.css">
+    <link rel="stylesheet" href="css/assignment.css">
+</head>
+<body>
+
+<!-- ==================== SPLASH SCREEN ==================== -->
+<div id="splashScreen" class="splash-overlay">
+    <div class="splash-sky"></div>
+    <div class="splash-content">
+        <div class="splash-shield">
+            <div class="shield-glow"></div>
+            <div class="shield-body">
+                <div class="shield-face"></div>
+                <div class="shield-swords">⚔️&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⚔️</div>
+                <div class="shield-rays"></div>
+                <div class="shield-icon">☀️</div>
+                <div class="shield-stars">★ ★ ★</div>
+            </div>
+        </div>
+        <div class="splash-logo">SunDay</div>
+        <div class="splash-bars"><span class="splash-bar"></span><span class="splash-bar"></span><span class="splash-bar"></span></div>
+        <div class="splash-tagline">Reserve Management System</div>
+        <div class="splash-subtitle">מערכת ניהול מילואים</div>
+        <div class="splash-version">v3.0</div>
+        <div class="splash-loader">
+            <div class="splash-loader-bar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== HEADER ==================== -->
+<header class="app-header">
+    <div class="logo">
+        <div class="logo-box">☀️ SunDay</div>
+        <div class="logo-text">
+            <h1>מערכת ניהול מילואים</h1>
+            <span class="version">v3.0</span>
+        </div>
+    </div>
+    <div class="header-right">
+        <div class="header-clock" id="headerClock"></div>
+        <div class="mission-info" id="missionInfo"></div>
+        <div class="db-selector">
+            <label>📂</label>
+            <select id="dbSelector" onchange="App.switchDatabase()"></select>
+            <button class="btn btn-sm btn-purple" onclick="App.createNewDatabase()">➕</button>
+            <button class="btn btn-sm btn-purple-light" onclick="App.renameDatabase()">✏️</button>
+            <button class="btn btn-sm btn-danger" onclick="App.deleteCurrentDatabase()">🗑️</button>
+        </div>
+    </div>
+</header>
+
+<!-- ==================== MAIN NAV ==================== -->
+<nav class="main-nav">
+    <button class="main-nav-btn active" data-section="dashboard" onclick="App.switchSection('dashboard')">
+        📊 לוח בקרה
+    </button>
+    <button class="main-nav-btn" data-section="attendance" onclick="App.switchSection('attendance')">
+        ☀️ נוכחות
+    </button>
+    <button class="main-nav-btn" data-section="assignment" onclick="App.switchSection('assignment')">
+        🔫 שיבוץ
+    </button>
+    <button class="main-nav-btn" data-section="settings" onclick="App.switchSection('settings')">
+        ⚙️ הגדרות
+    </button>
+</nav>
+
+<!-- ==================== MAIN CONTENT ==================== -->
+<div class="main-content">
+
+<!-- ==================== DASHBOARD (ללא שינוי) ==================== -->
+<div id="section-dashboard" class="section-pane active">
+    <div class="section-header">
+        <h2>📊 לוח בקרה ראשי</h2>
+        <div class="date-controls">
+            <label>יום: <input type="date" id="dashDate" onchange="Dashboard.refresh()"></label>
+            <button class="btn btn-sm btn-purple" onclick="Dashboard.setToday()">📅 היום</button>
+        </div>
+    </div>
+    <div id="dashSummary" class="summary-grid" style="margin-bottom:15px;"></div>
+    <div class="section-header" style="margin-bottom:10px;">
+        <h3>📋 סיכום נוכחות מחלקתי</h3>
+    </div>
+    <div id="dashPresenceTable" class="table-container" style="margin-bottom:15px;"></div>
+    <div id="dashPlatoonCards" class="platoon-cards-grid" style="margin-bottom:15px;"></div>
+
+    <div class="accordion" style="margin-top:15px;">
+        <button class="accordion-header" onclick="Dashboard.toggleSchedule()">
+            🔫 שבצ"ק ליום הנבחר
+            <span class="accordion-arrow" id="accordionArrow">◀</span>
+        </button>
+        <div class="accordion-body" id="dashScheduleContent" style="display:none;">
+            <div class="schedule-grid" id="dashScheduleGrid"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== ATTENDANCE ==================== -->
+<div id="section-attendance" class="section-pane">
+    <div class="sub-tabs">
+        <button class="sub-tab active" data-subtab="att-dashboard" onclick="App.switchSubTab('attendance','att-dashboard')">
+            📊 לוח בקרה פלוגתי
+        </button>
+        <div id="attendancePlatoonTabs" style="display:contents;"></div>
+    </div>
+    <div class="sub-content">
+        <div id="subtab-att-dashboard" class="sub-pane active">
+            <div class="section-header">
+                <h2>📊 לוח בקרה פלוגתי</h2>
+                <div class="date-range-controls">
+                    <label>מ: <input type="date" id="attDashStartDate"></label>
+                    <label>עד: <input type="date" id="attDashEndDate"></label>
+                    <button class="btn btn-sm btn-purple-light" onclick="AttendanceUI.resetDashDates()">↩️ כל המשימה</button>
+                    <button class="btn btn-sm btn-purple" onclick="AttendanceUI.refreshDashboard()">🔄</button>
+                    <button class="btn btn-sm btn-success" onclick="AttExport.exportCompanyReport()">📊 דוח</button>
+                </div>
+            </div>
+            <div id="attCompanySummary" class="summary-grid" style="margin-bottom:15px;"></div>
+            <div id="attCompanyRolesAlert" class="roles-alert-bar" style="margin-bottom:12px;"></div>
+            <div class="section-header" style="margin-bottom:10px;">
+                <h3>📋 סיכום נוכחות מחלקתי</h3>
+            </div>
+            <div id="attCompanyPresenceTable" class="table-container" style="margin-bottom:15px;"></div>
+            <div id="attPlatoonOverview" class="platoon-cards-grid"></div>
+        </div>
+        <div id="attendancePlatoonPanes"></div>
+    </div>
+</div>
+
+<!-- ==================== ASSIGNMENT (שינויים 1,2,5) ==================== -->
+<div id="section-assignment" class="section-pane">
+    <div class="sub-tabs">
+        <button class="sub-tab active" data-subtab="asgn-soldiers" onclick="App.switchSubTab('assignment','asgn-soldiers')">
+            👥 חיילים
+        </button>
+        <button class="sub-tab" data-subtab="asgn-positions" onclick="App.switchSubTab('assignment','asgn-positions')">
+            📍 עמדות
+        </button>
+        <button class="sub-tab" data-subtab="asgn-schedule" onclick="App.switchSubTab('assignment','asgn-schedule')">
+            📋 שיבוץ
+        </button>
+        <button class="sub-tab" data-subtab="asgn-workload" onclick="App.switchSubTab('assignment','asgn-workload')">
+            ⚖️ עומס
+        </button>
+    </div>
+    <div class="sub-content">
+
+        <!-- === SOLDIERS TAB (שינוי 1: טאבים מחלקתיים) === -->
+        <div id="subtab-asgn-soldiers" class="sub-pane active">
+            <div class="section-header">
+                <h2>👥 חיילים (מנוכחות + שיבוץ)</h2>
+                <div class="btn-group">
+                    <button class="btn btn-purple btn-sm" onclick="AssignmentUI.syncFromAttendance()">🔄 סנכרן מנוכחות</button>
+                    <button class="btn btn-success btn-sm" onclick="AssignExport.exportSoldiersExcel()">📊 ייצוא</button>
+                </div>
+            </div>
+            <div id="asgnSoldiersInfo" class="module-info"></div>
+            <!-- טאבים פנימיים לפי מחלקות -->
+            <div class="inner-platoon-tabs" id="asgnSoldiersPlatoonTabs"></div>
+            <div id="asgnSoldiersPlatoonPanes"></div>
+        </div>
+
+        <!-- === POSITIONS TAB (שינוי 5: שיוך עמדות למחלקה/פלוגה) === -->
+        <div id="subtab-asgn-positions" class="sub-pane">
+            <div class="section-header">
+                <h2>📍 ניהול עמדות</h2>
+                <div class="btn-group">
+                    <button class="btn btn-purple btn-sm" onclick="AssignmentUI.openAddPositionDialog()">➕ הוסף עמדה</button>
+                    <button class="btn btn-info btn-sm" onclick="AssignmentUI.importPositionsFromFile()">📂 ייבוא</button>
+                    <button class="btn btn-success btn-sm" onclick="AssignExport.exportPositionsExcel()">📊 ייצוא</button>
+                    <button class="btn btn-danger btn-xs" onclick="AssignReset.resetModule('positions')">🗑️ אפס עמדות</button>
+                </div>
+            </div>
+            <!-- טאבים פנימיים לפי מחלקות + פלוגתי -->
+            <div class="inner-platoon-tabs" id="asgnPositionsPlatoonTabs"></div>
+            <div id="asgnPositionsPlatoonPanes">
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>שם עמדה</th>
+                                <th>שיוך</th>
+                                <th>מחלקה/רוטציה</th>
+                                <th>מספר חיילים</th>
+                                <th>אורך משמרת</th>
+                                <th>שעות פעילות</th>
+                                <th>ימים פעילים</th>
+                                <th>עדיפות</th>
+                                <th>פעילה</th>
+                                <th>פעולות</th>
+                            </tr>
+                        </thead>
+                        <tbody id="asgnPositionsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- === SCHEDULE TAB (שינוי 2: שיבוץ מחלקתי + סנכרון) === -->
+        <div id="subtab-asgn-schedule" class="sub-pane">
+            <div class="section-header">
+                <h2>📋 שיבוץ</h2>
+                <div class="schedule-controls">
+                    <label>התחלה: <input type="date" id="asgnScheduleStartDate"></label>
+                    <label>ימים: <input type="number" id="asgnScheduleDays" value="7" min="1" max="60" style="width:60px;"></label>
+                    <button class="btn btn-purple" onclick="AssignmentUI.generateSchedule()">🔄 צור שיבוץ</button>
+                    <button class="btn btn-success btn-sm" onclick="AssignExport.exportScheduleExcel()">📊 ייצוא</button>
+                    <button class="btn btn-danger btn-sm" onclick="AssignReset.resetModule('schedule')">🗑️ אפס</button>
+                </div>
+            </div>
+            <!-- טאבים פנימיים: מחלקה א', מחלקה ב', ... פלוגתי -->
+            <div class="inner-platoon-tabs" id="asgnSchedulePlatoonTabs"></div>
+
+            <div class="highlight-bar">
+                <label>הדגש חייל:
+                    <select id="asgnHighlightSoldierSelect" onchange="AssignmentUI.highlightSoldier()">
+                        <option value="">-- בחר --</option>
+                    </select>
+                </label>
+                <span id="asgnHighlightInfo" style="font-size:12px;color:var(--purple-main);font-weight:700;"></span>
+                <button class="btn btn-sm btn-purple-light" onclick="AssignmentUI.clearHighlight()">🧹 נקה</button>
+            </div>
+
+            <div id="asgnScheduleWarnings" class="warnings-container" style="display:none;"></div>
+            <div id="asgnWorkloadPattern" class="pattern-info" style="display:none;"></div>
+
+            <div class="schedule-grid-container">
+                <div class="schedule-grid" id="asgnScheduleGrid"></div>
+            </div>
+        </div>
+
+        <!-- === WORKLOAD TAB === -->
+        <div id="subtab-asgn-workload" class="sub-pane">
+            <div class="section-header">
+                <h2>⚖️ איזון עומס</h2>
+                <button class="btn btn-purple btn-sm" onclick="AssignmentUI.refreshWorkload()">🔄 רענן</button>
+            </div>
+            <!-- טאבים פנימיים לפי מחלקות -->
+            <div class="inner-platoon-tabs" id="asgnWorkloadPlatoonTabs"></div>
+            <div id="asgnWorkloadSummary" class="workload-summary"></div>
+            <div id="asgnWorkloadTable" class="workload-details"></div>
+        </div>
+
+
+
+    </div>
+</div>
+
+<!-- ==================== SETTINGS (שינוי 3: טווחי תאריכים מדורגים) ==================== -->
+<div id="section-settings" class="section-pane">
+    <div class="sub-tabs">
+        <button class="sub-tab active" data-subtab="set-general" onclick="App.switchSubTab('settings','set-general')">
+            🔧 כלליות
+        </button>
+        <button class="sub-tab" data-subtab="set-attendance" onclick="App.switchSubTab('settings','set-attendance')">
+            ☀️ נוכחות
+        </button>
+        <button class="sub-tab" data-subtab="set-assignment" onclick="App.switchSubTab('settings','set-assignment')">
+            🔫 שיבוץ
+        </button>
+    </div>
+    <div class="sub-content">
+
+        <!-- === GENERAL SETTINGS === -->
+        <div id="subtab-set-general" class="sub-pane active">
+            <div class="settings-grid">
+
+                <div class="card">
+                    <h3 class="card-title">💾 ניהול נתונים</h3>
+                    <div class="setting-group">
+                        <button class="btn btn-purple" onclick="App.exportAllData()">📤 גיבוי כל המערכת (JSON)</button>
+                        <button class="btn btn-purple-light" onclick="App.importAllData()">📥 שחזור כל המערכת (JSON)</button>
+                    </div>
+                    <div class="setting-group">
+                        <button class="btn btn-success" onclick="AttExport.exportAllDataExcel()">📤 ייצוא נוכחות (Excel)</button>
+                        <button class="btn btn-info" onclick="AttExport.importAllDataExcel()">📥 ייבוא נוכחות (Excel)</button>
+                    </div>
+                    <div class="setting-group">
+                        <button class="btn btn-danger" onclick="App.resetAllData()">🗑️ אפס הכל</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">📊 סטטוס מערכת</h3>
+                    <div id="systemStatus" class="system-status"></div>
+                </div>
+
+                <!-- שינוי 3: תאריכי משימה כלליים -->
+                <div class="card">
+                    <h3 class="card-title">🎯 משימה כללית</h3>
+                    <div class="setting-group">
+                        <label>תאריך התחלת משימה:</label>
+                        <input type="date" id="settingMissionStart">
+                    </div>
+                    <div class="setting-group">
+                        <label>תאריך סיום משימה:</label>
+                        <input type="date" id="settingMissionEnd">
+                    </div>
+                    <button class="btn btn-purple" onclick="SettingsUI.saveMissionSettings()">💾 שמור</button>
+                </div>
+
+                <!-- שינוי 3: טווח תאריכים למודול נוכחות -->
+                <div class="card">
+                    <h3 class="card-title">📅 טווח תאריכים - נוכחות</h3>
+                    <p style="font-size:11px;color:var(--text-light);margin-bottom:10px;">טווח ספציפי בתוך תאריכי המשימה עבור מודול הנוכחות</p>
+                    <div class="setting-group">
+                        <label>מ:</label>
+                        <input type="date" id="settingAttStart">
+                    </div>
+                    <div class="setting-group">
+                        <label>עד:</label>
+                        <input type="date" id="settingAttEnd">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-purple" onclick="SettingsUI.saveModuleDates('attendance')">💾 שמור</button>
+                        <button class="btn btn-purple-light btn-sm" onclick="SettingsUI.resetModuleDates('attendance')">↩️ כל המשימה</button>
+                    </div>
+                </div>
+
+                <!-- שינוי 3: טווח תאריכים למודול שיבוץ -->
+                <div class="card">
+                    <h3 class="card-title">📅 טווח תאריכים - שיבוץ</h3>
+                    <p style="font-size:11px;color:var(--text-light);margin-bottom:10px;">טווח ספציפי בתוך תאריכי המשימה עבור מודול השיבוץ</p>
+                    <div class="setting-group">
+                        <label>מ:</label>
+                        <input type="date" id="settingAsgnStart">
+                    </div>
+                    <div class="setting-group">
+                        <label>עד:</label>
+                        <input type="date" id="settingAsgnEnd">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-purple" onclick="SettingsUI.saveModuleDates('assignment')">💾 שמור</button>
+                        <button class="btn btn-purple-light btn-sm" onclick="SettingsUI.resetModuleDates('assignment')">↩️ כל המשימה</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">🏗️ מבנה פלוגה</h3>
+                    <div class="setting-group">
+                        <label>מספר מחלקות:</label>
+                        <input type="number" id="settingNumPlatoons" min="1" max="6" value="3" onchange="SettingsUI.renderPlatoonNameSettings()">
+                    </div>
+                    <div id="platoonNamesSettings"></div>
+                    <button class="btn btn-purple" onclick="SettingsUI.savePlatoonSettings()" style="margin-top:10px;">💾 שמור מבנה</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- === ATTENDANCE SETTINGS === -->
+        <div id="subtab-set-attendance" class="sub-pane">
+            <div class="settings-grid">
+
+                <div class="card">
+                    <h3 class="card-title">📊 ספי נוכחות</h3>
+                    <div class="setting-group">
+                        <label>סף קריטי (%) - אדום:</label>
+                        <input type="number" id="settingThresholdCritical" min="0" max="100">
+                    </div>
+                    <div class="setting-group">
+                        <label>סף חריג (%) - צהוב:</label>
+                        <input type="number" id="settingThresholdWarning" min="0" max="100">
+                    </div>
+                    <button class="btn btn-purple" onclick="SettingsUI.saveThresholdSettings()">💾 שמור</button>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">🔢 כללי ספירת ימים</h3>
+                    <div class="setting-group">
+                        <label>יום יציאה נחשב כהיעדרות:</label>
+                        <select id="settingCountLeaveDay"><option value="yes">כן</option><option value="no">לא</option></select>
+                    </div>
+                    <div class="setting-group">
+                        <label>יום חזרה נחשב כהיעדרות:</label>
+                        <select id="settingCountReturnDay"><option value="yes">כן</option><option value="no">לא</option></select>
+                    </div>
+                    <div class="setting-group">
+                        <label>שישי-שבת נספרים כ:</label>
+                        <select id="settingWeekendCount"><option value="two">שני ימים</option><option value="one">יום אחד</option></select>
+                    </div>
+                    <button class="btn btn-purple" onclick="SettingsUI.saveCountingSettings()">💾 שמור</button>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">🕐 שעות ברירת מחדל</h3>
+                    <div class="setting-group">
+                        <label>שעת יציאה:</label>
+                        <input type="time" id="settingDefaultLeaveTime">
+                    </div>
+                    <div class="setting-group">
+                        <label>שעת חזרה:</label>
+                        <input type="time" id="settingDefaultReturnTime">
+                    </div>
+                    <div class="setting-group">
+                        <label>סף יציאה (אחרי=נוכח היום):</label>
+                        <input type="time" id="settingLeaveThreshold">
+                    </div>
+                    <button class="btn btn-purple" onclick="SettingsUI.saveTimeSettings()">💾 שמור</button>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">🎖️ מפקדים</h3>
+                    <div class="setting-group">
+                        <label>מינימום מפקדים לכל מחלקה:</label>
+                        <input type="number" id="settingMinCommanders" min="0" max="10">
+                    </div>
+                    <button class="btn btn-purple" onclick="SettingsUI.saveCommanderSettings()">💾 שמור</button>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">👔 בעלי תפקידים</h3>
+                    <div id="rolesSettingsList"></div>
+                    <div class="btn-group" style="margin-top:10px;">
+                        <button class="btn btn-purple btn-sm" onclick="SettingsUI.addRoleSetting()">➕ הוסף תפקיד</button>
+                        <button class="btn btn-purple" onclick="SettingsUI.saveRolesSettings()">💾 שמור</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- === ASSIGNMENT SETTINGS === -->
+        <div id="subtab-set-assignment" class="sub-pane">
+            <div class="settings-grid">
+                <div class="card">
+                    <h3 class="card-title">⏱️ הגדרות שיבוץ</h3>
+                    <div class="setting-group">
+                        <label>שעות מנוחה מינימליות:</label>
+                        <input type="number" id="settingMinRest" min="1" max="24">
+                    </div>
+                    <div class="setting-group">
+                        <label>ימים ברירת מחדל:</label>
+                        <input type="number" id="settingDefaultDays" min="1" max="60">
+                    </div>
+                    <button class="btn btn-purple" onclick="SettingsUI.saveAssignmentSettings()">💾 שמור</button>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">🗑️ איפוס לפי מודול</h3>
+                    <div class="reset-grid">
+                        <button class="btn btn-danger btn-sm" onclick="AssignReset.resetModule('soldiers')">🗑️ אפס חיילי שיבוץ</button>
+                        <button class="btn btn-danger btn-sm" onclick="AssignReset.resetModule('positions')">🗑️ אפס עמדות</button>
+                        <button class="btn btn-danger btn-sm" onclick="AssignReset.resetModule('schedule')">🗑️ אפס שיבוץ</button>
+                        <button class="btn btn-danger btn-sm" onclick="AssignReset.resetModule('company')">🗑️ אפס פלוגתי</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</div> <!-- end main-content -->
+
+<!-- ==================== DIALOGS ==================== -->
+<div class="dialog-overlay" id="dialogOverlay" style="display:none;" onclick="App.closeDialog(event)">
+    <div class="dialog" id="dialogContent" onclick="event.stopPropagation()"></div>
+</div>
+
+<div class="dialog-overlay" id="soldierCardOverlay" style="display:none;" onclick="AssignmentUI.closeSoldierCard(event)">
+    <div class="soldier-card-dialog" id="soldierCardContent" onclick="event.stopPropagation()"></div>
+</div>
+
+<!-- ==================== TOAST ==================== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ==================== SCRIPTS ==================== -->
+<script src="js/xlsx-loader.js"></script>
+<script src="js/data-attendance.js"></script>
+<script src="js/data-assignment.js"></script>
+<script src="js/calc.js"></script>
+<script src="js/bridge.js"></script>
+<script src="js/scheduler.js"></script>
+<script src="js/company.js"></script>
+<script src="js/ui-dashboard.js"></script>
+<script src="js/ui-attendance.js"></script>
+<script src="js/ui-assignment.js"></script>
+<script src="js/ui-settings.js"></script>
+<script src="js/export.js"></script>
+<script src="js/app.js"></script>
+<!-- PWA Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+            .then(reg => console.log('☀️ SW registered:', reg.scope))
+            .catch(err => console.warn('☀️ SW failed:', err));
+    });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+﻿/* ============================================
+   SunDay v3.0 - Attendance Module Styles
+   ============================================ */
+
+/* Attendance-specific overrides */
+#section-attendance .sub-tabs {
+    border-bottom: 2px solid var(--purple-lighter);
+}
+
+/* Heatmap enhancements */
+#section-attendance .heatmap-wrapper {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Leaves accordion styling */
+#section-attendance .leaves-accordion {
+    transition: all 0.2s ease;
+}
+
+/* Platoon tabs in attendance */
+#section-attendance .platoon-tab-btn {
+    transition: all 0.2s;
+}
+
+#section-attendance .platoon-tab-btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Dashboard cards animation */
+#section-attendance .summary-card {
+    transition: transform 0.2s;
+}
+
+#section-attendance .summary-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Mini calendar enhancements */
+#section-attendance .mini-calendar td.hm-present {
+    cursor: default;
+}
+
+#section-attendance .mini-calendar td.hm-absent {
+    cursor: default;
+}
