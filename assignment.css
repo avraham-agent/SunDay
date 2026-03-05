@@ -1,0 +1,50 @@
+/* ============================================
+   SunDay v3.0 - Assignment Module Styles
+   ============================================ */
+
+/* Assignment-specific overrides */
+#section-assignment .sub-tabs {
+    border-bottom: 2px solid var(--purple-lighter);
+}
+
+#section-assignment .schedule-grid-container {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Soldier availability indicator in assignment */
+#section-assignment .soldier-available {
+    color: var(--success);
+    font-weight: 700;
+}
+
+#section-assignment .soldier-absent {
+    color: var(--danger);
+    font-weight: 700;
+}
+
+/* Company module cards in assignment */
+#section-assignment .platoon-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#section-assignment .platoon-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Schedule grid sticky header */
+#section-assignment .schedule-grid th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Workload bars animation */
+#section-assignment .workload-bar {
+    animation: barGrow 0.5s ease-out;
+}
+
+@keyframes barGrow {
+    from { width: 0; }
+}

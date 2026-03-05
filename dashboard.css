@@ -1,0 +1,19 @@
+/* ============================================
+   SunDay - Dashboard Styles
+   ============================================ */
+/* Dashboard-specific overrides (minimal - most is in main.css) */
+
+#section-dashboard .date-controls {
+    background: var(--purple-surface);
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--purple-lighter);
+}
+
+#dashSummary .summary-card {
+    transition: transform 0.2s;
+}
+
+#dashSummary .summary-card:hover {
+    transform: translateY(-2px);
+}
