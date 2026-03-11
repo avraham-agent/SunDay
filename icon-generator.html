@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head><title>SunDay Icon Generator</title></head>
+<body style="background:#eee;padding:40px;font-family:Arial;">
+<h2>SunDay Icon Generator</h2>
+<p>לחץ על כל כפתור להוריד את האייקון. שמור את כל הקבצים בתיקיית <code>icons/</code></p>
+<div id="buttons"></div>
+<canvas id="canvas" style="display:none;"></canvas>
+<script>
+var sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+var container = document.getElementById('buttons');
+sizes.forEach(function(size) {
+    var btn = document.createElement('button');
+    btn.textContent = 'Download icon-' + size + '.png';
+    btn.style.cssText = 'display:block;margin:8px 0;padding:10px 20px;font-size:14px;cursor:pointer;background:#e94560;color:white;border:none;border-radius:8px;';
+    btn.onclick = function() { generateIcon(size); };
+    container.appendChild(btn);
+});
+
+function generateIcon(size) {
+    var canvas = document.getElementById('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    var ctx = canvas.getContext('2d');
+
+    // Background
+    var grad = ctx.createLinearGradient(0, 0, size, size);
+    grad.addColorStop(0, '#1a1a2e');
+    grad.addColorStop(0.5, '#16213e');
+    grad.addColorStop(1, '#0f3460');
+    ctx.fillStyle = grad;
+
+    // Rounded rect
+    var r = size * 0.15;
+    ctx.beginPath();
+    ctx.moveTo(r, 0);
+    ctx.lineTo(size - r, 0);
+    ctx.quadraticCurveTo(size, 0, size, r);
+    ctx.lineTo(size, size - r);
+    ctx.quadraticCurveTo(size, size, size - r, size);
+    ctx.lineTo(r, size);
+    ctx.quadraticCurveTo(0, size, 0, size - r);
+    ctx.lineTo(0, r);
+    ctx.quadraticCurveTo(0, 0, r, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Sun circle
+    var cx = size * 0.5;
+    var cy = size * 0.38;
+    var sunR = size * 0.15;
+    var sunGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, sunR);
+    sunGrad.addColorStop(0, '#ffd700');
+    sunGrad.addColorStop(1, '#e94560');
+    ctx.fillStyle = sunGrad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, sunR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sun rays
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = size * 0.02;
+    for (var i = 0; i < 8; i++) {
+        var angle = (i * Math.PI * 2) / 8;
+        var x1 = cx + Math.cos(angle) * (sunR + size * 0.03);
+        var y1 = cy + Math.sin(angle) * (sunR + size * 0.03);
+        var x2 = cx + Math.cos(angle) * (sunR + size * 0.08);
+        var y2 = cy + Math.sin(angle) * (sunR + size * 0.08);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
+
+    // Text "SD"
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold ' + Math.round(size * 0.22) + 'px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('SD', cx, size * 0.7);
+
+    // Small version text
+    if (size >= 128) {
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.font = Math.round(size * 0.06) + 'px Arial';
+        ctx.fillText('v4.0', cx, size * 0.88);
+    }
+
+    // Download
+    var link = document.createElement('a');
+    link.download = 'icon-' + size + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+</script>
+</body>
+</html>
