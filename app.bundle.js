@@ -1135,13 +1135,16 @@ const Calc = {
 
     cellClass(cell) {
         if (cell.outsideMission) return 'hm-outside';
-        if (cell.isFuture) return 'hm-future';
-        if (!cell.present && cell.reason) {
-            const r = AttendanceData.LEAVE_REASONS.find(x => x.id === cell.reason);
-            return r ? r.cls : 'hm-absent';
+        if (cell.isFuture) {
+            return cell.present ? 'hm-future-present' : 'hm-future-absent';
         }
-        if (!cell.present) return 'hm-absent';
-        return 'hm-present';
+        return cell.present ? 'hm-past-present' : 'hm-past-absent';
+    },
+
+    reasonIcon(reason) {
+        if (!reason) return '';
+        const map = {'חופשה':'🏖','קורס':'📚','מחלה':'🤒','מיוחד':'⭐','אחר':''};
+        return map[reason] || '';
     },
 
     reasonShort(reason) {
@@ -3427,12 +3430,11 @@ const AttendanceUI = {
             <div id="plLeaves-${pl.id}" class="table-container-inner"></div>
         </div>
         <div class="legend">
-            <div class="legend-item"><div class="legend-box" style="background:#d4edda"></div>בבסיס</div>
-            <div class="legend-item"><div class="legend-box" style="background:#fff3cd"></div>חופשה</div>
-            <div class="legend-item"><div class="legend-box" style="background:#d1ecf1"></div>קורס</div>
-            <div class="legend-item"><div class="legend-box" style="background:#fde2cc"></div>מחלה</div>
-            <div class="legend-item"><div class="legend-box" style="background:#e8d5f5"></div>מיוחד</div>
-            <div class="legend-item"><div class="legend-box" style="background:#f8d7da"></div>אחר</div>
+            <div class="legend-item"><div class="legend-box" style="background:#a8e6a3"></div>נוכח (עבר)</div>
+            <div class="legend-item"><div class="legend-box" style="background:#f5a6a6"></div>נעדר (עבר)</div>
+            <div class="legend-item"><div class="legend-box" style="background:#2d8a4e"></div>נוכח (עתיד)</div>
+            <div class="legend-item"><div class="legend-box" style="background:#b71c1c"></div>נעדר (עתיד)</div>
+            <div class="legend-item"><div class="legend-box" style="background:#fff;border:3px solid #f59e0b"></div>היום</div>
             <div class="legend-item"><div class="legend-box" style="background:#fff3cd;border:2px solid var(--purple-dark)"></div>מפקד</div>
             <div class="legend-item"><div class="legend-box" style="background:#e8e8e8"></div>מחוץ למשימה</div>
         </div>
@@ -3945,9 +3947,10 @@ const AttendanceUI = {
                 const cell = data.cells[sol.id][d.dateStr];
                 const cls = Calc.cellClass(cell);
                 const todayCls = cell.isToday ? ' hm-today' : '';
-                const short = cell.present ? '' : Calc.reasonShort(cell.reason);
+                const icon = !cell.present && !cell.outsideMission ? Calc.reasonIcon(cell.reason) : '';
+                const iconHtml = icon ? `<span class="reason-icon">${icon}</span>` : '';
                 const tip = cell.present ? sol.name + ' - בבסיס' : sol.name + ' - ' + (cell.reason || 'נעדר');
-                html += `<td class="hm-cell ${cls}${todayCls}" data-col-index="${colIdx}" title="${tip}" onclick="AttendanceUI.onHeatmapClick('${sol.id}','${d.dateStr}','${pid}')">${short}</td>`;
+                html += `<td class="hm-cell ${cls}${todayCls}" data-col-index="${colIdx}" title="${tip}" onclick="AttendanceUI.onHeatmapClick('${sol.id}','${d.dateStr}','${pid}')">${iconHtml}</td>`;
             });
             html += '</tr>';
         });
@@ -4089,15 +4092,17 @@ const AttendanceUI = {
             const inMission = ds >= missionStart && ds <= missionEnd;
             let bgColor = '#fff', textColor = '#333';
             if (inMission) {
+                const isFuture = ds > today;
                 const r = AttendanceData.isSoldierAbsentOnDate(soldierId, ds);
-                if (r.absent) {
-                    const rc = AttendanceData.LEAVE_REASONS.find(x => x.id === r.reason);
-                    const colorMap = { 'hm-leave': '#fff3cd', 'hm-course': '#d1ecf1', 'hm-sick': '#fde2cc', 'hm-special': '#e8d5f5', 'hm-absent': '#f8d7da' };
-                    bgColor = rc ? (colorMap[rc.cls] || '#f8d7da') : '#f8d7da';
-                    textColor = '#721c24';
-                } else { bgColor = '#d4edda'; textColor = '#155724'; }
+                if (isFuture) {
+                    bgColor = r.absent ? '#b71c1c' : '#2d8a4e';
+                    textColor = '#ffffff';
+                } else {
+                    bgColor = r.absent ? '#f5a6a6' : '#a8e6a3';
+                    textColor = r.absent ? '#721c24' : '#1a5c1a';
+                }
             } else { bgColor = '#f0f0f0'; textColor = '#bbb'; }
-            const todayBorder = ds === today ? 'border:2px solid var(--purple-mid);' : '';
+            const todayBorder = ds === today ? 'border:3px solid #f59e0b;' : '';
             html += `<td style="background:${bgColor};color:${textColor};${todayBorder}">${d}</td>`;
             if ((firstDay + d) % 7 === 0 && d < daysInMonth) html += '</tr><tr>';
         }
@@ -6987,11 +6992,16 @@ const ReportExport = {
                         // מחלה - תמיד בנפרד
                         plReport.sickList.push(s.name);
                     }
-                    else if (!isSingleDay && dateStr === leave.start_date) {
+                    else if (isSingleDay) {
+                        // יום אחד — יוצא וחוזר באותו יום
+                        plReport.leavingList.push(s.name);
+                        plReport.returningList.push(s.name);
+                    }
+                    else if (dateStr === leave.start_date) {
                         // יוצא היום - מתחיל העדרות
                         plReport.leavingList.push(s.name);
                     }
-                    else if (!isSingleDay && dateStr === leave.end_date) {
+                    else if (dateStr === leave.end_date) {
                         // חוזר היום - מסיים העדרות
                         plReport.returningList.push(s.name);
                     }
@@ -7018,18 +7028,30 @@ const ReportExport = {
                     absentCount += names.length;
                 }
 
-                // יוצאים היום - לפי הגדרת המשתמש
+                // זיהוי חיילים שמופיעים בשתי הרשימות (יום אחד — יוצא וחוזר באותו יום)
+                const singleDayNames = new Set(plReport.leavingList.filter(n => plReport.returningList.includes(n)));
+                const leavingOnlyCount = plReport.leavingList.length - singleDayNames.size;
+                const returningOnlyCount = plReport.returningList.length - singleDayNames.size;
+
+                // יוצאים היום (לא כולל יום-אחד) - לפי הגדרת המשתמש
                 if (settings.leavingCountsAs === 'present') {
-                    presentCount += plReport.leavingList.length;
+                    presentCount += leavingOnlyCount;
                 } else {
-                    absentCount += plReport.leavingList.length;
+                    absentCount += leavingOnlyCount;
                 }
 
-                // חוזרים היום - לפי הגדרת המשתמש
+                // חוזרים היום (לא כולל יום-אחד) - לפי הגדרת המשתמש
                 if (settings.returningCountsAs === 'present') {
-                    presentCount += plReport.returningList.length;
+                    presentCount += returningOnlyCount;
                 } else {
-                    absentCount += plReport.returningList.length;
+                    absentCount += returningOnlyCount;
+                }
+
+                // יום-אחד — נספר פעם אחת לפי הגדרת "חוזר היום"
+                if (settings.returningCountsAs === 'present') {
+                    presentCount += singleDayNames.size;
+                } else {
+                    absentCount += singleDayNames.size;
                 }
 
                 plReport.present = presentCount;
